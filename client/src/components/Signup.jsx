@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -13,6 +14,7 @@ const Signup = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { signup, error, clearError, isAuthenticated } = useAuth();
+  const { isDark } = useTheme();
   const navigate = useNavigate();
 
   // Redirect if already authenticated
@@ -25,7 +27,7 @@ const Signup = () => {
   // Clear errors when component mounts
   useEffect(() => {
     clearError();
-  }, [clearError]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -80,6 +82,7 @@ const Signup = () => {
     if (!validateForm()) return;
 
     setIsSubmitting(true);
+    setErrors({}); // Clear previous errors
     
     try {
       const result = await signup({
@@ -89,37 +92,42 @@ const Signup = () => {
       });
       
       if (result.success) {
-        navigate('/dashboard');
+        // Small delay to ensure auth state is updated
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 100);
+      } else {
+        setErrors({ general: result.error || 'Signup failed. Please try again.' });
       }
     } catch (err) {
-      console.error('Signup error:', err);
+      setErrors({ general: 'Signup failed. Please try again.' });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className={`min-h-screen flex items-center justify-center py-4 px-4 sm:py-12 sm:px-6 lg:px-8 transition-colors duration-200 ${isDark ? 'bg-dark-900' : 'bg-gray-50'}`}>
+      <div className="max-w-md w-full space-y-6 sm:space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className={`mt-2 sm:mt-6 text-center text-2xl sm:text-3xl font-extrabold transition-colors duration-200 ${isDark ? 'text-white' : 'text-gray-900'}`}>
             Create your FocusFlow account
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className={`mt-2 text-center text-sm transition-colors duration-200 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
             Or{' '}
             <Link
               to="/login"
-              className="font-medium text-indigo-600 hover:text-indigo-500"
+              className="font-medium text-primary-600 hover:text-primary-500 transition-colors duration-200"
             >
               sign in to your existing account
             </Link>
           </p>
         </div>
         
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-6 sm:mt-8 space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="name" className={`block text-sm font-medium transition-colors duration-200 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                 Full Name
               </label>
               <input
@@ -128,9 +136,9 @@ const Signup = () => {
                 type="text"
                 autoComplete="name"
                 required
-                className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
-                  errors.name ? 'border-red-300' : 'border-gray-300'
-                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+                className={`mt-1 appearance-none relative block w-full px-3 py-3 border rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-base sm:text-sm transition-colors duration-200 ${
+                  errors.name ? 'border-red-300' : isDark ? 'border-dark-600 bg-dark-700 text-white placeholder-gray-400' : 'border-gray-300 placeholder-gray-500 text-gray-900'
+                }`}
                 placeholder="Enter your full name"
                 value={formData.name}
                 onChange={handleChange}
@@ -141,7 +149,7 @@ const Signup = () => {
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className={`block text-sm font-medium transition-colors duration-200 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                 Email Address
               </label>
               <input
@@ -150,9 +158,9 @@ const Signup = () => {
                 type="email"
                 autoComplete="email"
                 required
-                className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
-                  errors.email ? 'border-red-300' : 'border-gray-300'
-                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+                className={`mt-1 appearance-none relative block w-full px-3 py-3 border rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-base sm:text-sm transition-colors duration-200 ${
+                  errors.email ? 'border-red-300' : isDark ? 'border-dark-600 bg-dark-700 text-white placeholder-gray-400' : 'border-gray-300 placeholder-gray-500 text-gray-900'
+                }`}
                 placeholder="Enter your email address"
                 value={formData.email}
                 onChange={handleChange}
@@ -163,7 +171,7 @@ const Signup = () => {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className={`block text-sm font-medium transition-colors duration-200 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                 Password
               </label>
               <input
@@ -172,9 +180,9 @@ const Signup = () => {
                 type="password"
                 autoComplete="new-password"
                 required
-                className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
-                  errors.password ? 'border-red-300' : 'border-gray-300'
-                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+                className={`mt-1 appearance-none relative block w-full px-3 py-3 border rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-base sm:text-sm transition-colors duration-200 ${
+                  errors.password ? 'border-red-300' : isDark ? 'border-dark-600 bg-dark-700 text-white placeholder-gray-400' : 'border-gray-300 placeholder-gray-500 text-gray-900'
+                }`}
                 placeholder="Create a password"
                 value={formData.password}
                 onChange={handleChange}
@@ -185,7 +193,7 @@ const Signup = () => {
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="confirmPassword" className={`block text-sm font-medium transition-colors duration-200 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                 Confirm Password
               </label>
               <input
@@ -194,9 +202,9 @@ const Signup = () => {
                 type="password"
                 autoComplete="new-password"
                 required
-                className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
-                  errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
-                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm`}
+                className={`mt-1 appearance-none relative block w-full px-3 py-3 border rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-base sm:text-sm transition-colors duration-200 ${
+                  errors.confirmPassword ? 'border-red-300' : isDark ? 'border-dark-600 bg-dark-700 text-white placeholder-gray-400' : 'border-gray-300 placeholder-gray-500 text-gray-900'
+                }`}
                 placeholder="Confirm your password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
@@ -207,9 +215,11 @@ const Signup = () => {
             </div>
           </div>
 
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-700">{error}</div>
+          {(error || errors.general) && (
+            <div className={`rounded-md p-4 transition-colors duration-200 ${isDark ? 'bg-red-900/20' : 'bg-red-50'}`}>
+              <div className={`text-sm transition-colors duration-200 ${isDark ? 'text-red-400' : 'text-red-700'}`}>
+                {error || errors.general}
+              </div>
             </div>
           )}
 
@@ -217,7 +227,7 @@ const Signup = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-base font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation transition-colors duration-200"
             >
               {isSubmitting ? 'Creating account...' : 'Create account'}
             </button>

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 import { authAPI } from '../services/api';
 
 // Initial state
@@ -72,25 +72,35 @@ export const AuthProvider = ({ children }) => {
 
   // Check if user is authenticated on app load
   useEffect(() => {
+    let isMounted = true;
+    
     const checkAuth = async () => {
       try {
         dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: true });
         const response = await authAPI.getCurrentUser();
         
-        if (response.success) {
-          dispatch({ 
-            type: AUTH_ACTIONS.LOGIN_SUCCESS, 
-            payload: response.user 
-          });
-        } else {
-          dispatch({ type: AUTH_ACTIONS.LOGOUT });
+        if (isMounted) {
+          if (response.success) {
+            dispatch({ 
+              type: AUTH_ACTIONS.LOGIN_SUCCESS, 
+              payload: response.user 
+            });
+          } else {
+            dispatch({ type: AUTH_ACTIONS.LOGOUT });
+          }
         }
       } catch (error) {
-        dispatch({ type: AUTH_ACTIONS.LOGOUT });
+        if (isMounted) {
+          dispatch({ type: AUTH_ACTIONS.LOGOUT });
+        }
       }
     };
 
     checkAuth();
+    
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Signup function
@@ -115,7 +125,7 @@ export const AuthProvider = ({ children }) => {
         return { success: false, error: response.message };
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Signup failed';
+      const errorMessage = error.response?.data?.message || error.message || 'Signup failed';
       dispatch({ 
         type: AUTH_ACTIONS.SET_ERROR, 
         payload: errorMessage 
@@ -146,7 +156,7 @@ export const AuthProvider = ({ children }) => {
         return { success: false, error: response.message };
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Login failed';
+      const errorMessage = error.response?.data?.message || error.message || 'Login failed';
       dispatch({ 
         type: AUTH_ACTIONS.SET_ERROR, 
         payload: errorMessage 
@@ -167,9 +177,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Clear error function
-  const clearError = () => {
+  const clearError = useCallback(() => {
     dispatch({ type: AUTH_ACTIONS.CLEAR_ERROR });
-  };
+  }, []);
 
   const value = {
     ...state,

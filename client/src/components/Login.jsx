@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -11,6 +12,7 @@ const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { login, error, clearError, isAuthenticated } = useAuth();
+  const { isDark } = useTheme();
   const navigate = useNavigate();
 
   // Redirect if already authenticated
@@ -23,7 +25,7 @@ const Login = () => {
   // Clear errors when component mounts
   useEffect(() => {
     clearError();
-  }, [clearError]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -64,40 +66,46 @@ const Login = () => {
     if (!validateForm()) return;
 
     setIsSubmitting(true);
+    setErrors({}); // Clear previous errors
     
     try {
       const result = await login(formData);
       
       if (result.success) {
-        navigate('/dashboard');
+        // Small delay to ensure auth state is updated
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 100);
+      } else {
+        setErrors({ general: result.error || 'Login failed. Please try again.' });
       }
     } catch (err) {
-      console.error('Login error:', err);
+      setErrors({ general: 'Login failed. Please try again.' });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className={`min-h-screen flex items-center justify-center py-4 px-4 sm:py-12 sm:px-6 lg:px-8 transition-colors duration-200 ${isDark ? 'bg-dark-900' : 'bg-gray-50'}`}>
+      <div className="max-w-md w-full space-y-6 sm:space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className={`mt-2 sm:mt-6 text-center text-2xl sm:text-3xl font-extrabold transition-colors duration-200 ${isDark ? 'text-white' : 'text-gray-900'}`}>
             Sign in to FocusFlow
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className={`mt-2 text-center text-sm transition-colors duration-200 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
             Or{' '}
             <Link
               to="/signup"
-              className="font-medium text-indigo-600 hover:text-indigo-500"
+              className="font-medium text-primary-600 hover:text-primary-500 transition-colors duration-200"
             >
               create a new account
             </Link>
           </p>
         </div>
         
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
+        <form className="mt-6 sm:mt-8 space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
+          <div className="space-y-4">
             <div>
               <label htmlFor="email" className="sr-only">
                 Email address
@@ -108,9 +116,9 @@ const Login = () => {
                 type="email"
                 autoComplete="email"
                 required
-                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
-                  errors.email ? 'border-red-300' : 'border-gray-300'
-                } placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
+                className={`appearance-none relative block w-full px-3 py-3 border rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-base sm:text-sm transition-colors duration-200 ${
+                  errors.email ? 'border-red-300' : isDark ? 'border-dark-600 bg-dark-700 text-white placeholder-gray-400' : 'border-gray-300 placeholder-gray-500 text-gray-900'
+                }`}
                 placeholder="Email address"
                 value={formData.email}
                 onChange={handleChange}
@@ -119,7 +127,7 @@ const Login = () => {
                 <p className="mt-1 text-sm text-red-600">{errors.email}</p>
               )}
             </div>
-            
+
             <div>
               <label htmlFor="password" className="sr-only">
                 Password
@@ -130,9 +138,9 @@ const Login = () => {
                 type="password"
                 autoComplete="current-password"
                 required
-                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
-                  errors.password ? 'border-red-300' : 'border-gray-300'
-                } placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
+                className={`appearance-none relative block w-full px-3 py-3 border rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-base sm:text-sm transition-colors duration-200 ${
+                  errors.password ? 'border-red-300' : isDark ? 'border-dark-600 bg-dark-700 text-white placeholder-gray-400' : 'border-gray-300 placeholder-gray-500 text-gray-900'
+                }`}
                 placeholder="Password"
                 value={formData.password}
                 onChange={handleChange}
@@ -143,9 +151,11 @@ const Login = () => {
             </div>
           </div>
 
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-700">{error}</div>
+          {(error || errors.general) && (
+            <div className={`rounded-md p-4 transition-colors duration-200 ${isDark ? 'bg-red-900/20' : 'bg-red-50'}`}>
+              <div className={`text-sm transition-colors duration-200 ${isDark ? 'text-red-400' : 'text-red-700'}`}>
+                {error || errors.general}
+              </div>
             </div>
           )}
 
@@ -153,7 +163,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-base font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation transition-colors duration-200"
             >
               {isSubmitting ? 'Signing in...' : 'Sign in'}
             </button>
